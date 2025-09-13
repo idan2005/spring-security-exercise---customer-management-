@@ -1,4 +1,3 @@
-
 <div dir="rtl">
 
 # משימה: הרחבת אפליקציית Spring Security עם ניהול תפקידים (Roles)

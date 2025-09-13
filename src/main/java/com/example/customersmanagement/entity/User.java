@@ -20,7 +20,7 @@ public class User {
     @Column(name = "password",nullable = false)
     private String password;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",                           // join table name
             joinColumns = @JoinColumn(name = "username"),  // FK to User

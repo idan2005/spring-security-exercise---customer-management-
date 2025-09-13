@@ -9,31 +9,41 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class AuthApiUserDetailsService implements UserDetailsService {
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
+
     public AuthApiUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
     @Override
-    public UserDetails loadUserByUsername(String username) {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Optional<User> userOptional = userRepository.findUserByUsername(username);
-        if (!userOptional.isPresent()) {
-            throw new UsernameNotFoundException(username);
+        if (userOptional.isEmpty()) {
+            throw new UsernameNotFoundException("User not found: " + username);
         }
+
         User user = userOptional.get();
+
         CustomUserDetails userDetails = new CustomUserDetails();
         userDetails.setUsername(user.getUsername());
         userDetails.setPassword(user.getPassword());
-        // Convert roles to GrantedAuthority with "ROLE_" prefix
-        Collection<GrantedAuthority> authorities = user.getRoles().stream()
+
+        // Defensive copy of roles to avoid ConcurrentModificationException
+        Collection<GrantedAuthority> authorities = new HashSet<>(user.getRoles())
+                .stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         userDetails.setAuthorities(authorities);
 

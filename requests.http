@@ -1,0 +1,73 @@
+### Public Endpoints
+GET http://localhost:8080/
+
+###
+GET http://localhost:8080/login
+
+###
+GET http://localhost:8080/register
+
+###
+GET http://localhost:8080/about
+
+###
+GET http://localhost:8080/contact
+
+
+
+### User Endpoints
+GET http://localhost:8080/user/profile
+
+###
+POST http://localhost:8080/user/profile/edit
+Content-Type: application/json
+
+{
+  "name": "Idan",
+  "email": "idan@example.com"
+}
+
+###
+GET http://localhost:8080/user/dashboard
+
+###
+GET http://localhost:8080/user/settings
+
+###
+GET http://localhost:8080/user/activity
+
+
+
+### Admin Endpoints
+GET http://localhost:8080/admin/dashboard
+
+###
+GET http://localhost:8080/admin/users
+
+###
+POST http://localhost:8080/admin/users/create
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "role": "USER"
+}
+
+###
+PUT http://localhost:8080/admin/users/1/edit
+Content-Type: application/json
+
+{
+  "username": "updatedUser",
+  "email": "updated@example.com"
+}
+
+###
+DELETE http://localhost:8080/admin/users/1/delete
+
+###
+GET http://localhost:8080/admin/roles
+
+###
+GET http://localhost:8080/admin/reports

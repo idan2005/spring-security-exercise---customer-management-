@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 public class DataInitializer {
@@ -27,29 +28,35 @@ public class DataInitializer {
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
-            // ודא שקיים Role ADMIN
+            // Ensure ADMIN role exists
             Role adminRole = roleRepository.findByRoleName("ADMIN")
-                    .orElseGet(() -> {
-                        Role role = new Role();
-                        role.setRoleName("ADMIN");
-                        role.setDescription("Default administrator role");
-                        return roleRepository.save(role);
-                    });
+                    .orElseGet(() -> roleRepository.save(new Role("ADMIN", "Administrator role")));
 
-            // אם אין משתמשים – צור משתמש admin
-            if (userRepository.count() == 0) {
-                User defaultUser = new User();
-                defaultUser.setUsername("admin");
-                defaultUser.setPassword(passwordEncoder.encode("admin123")); // שים לב: הודעת ההדפסה שלך אמרה סיסמה שונה
-                defaultUser.setRoles(new HashSet<>());
-                defaultUser.getRoles().add(adminRole);
+                //  Create admin  user if not exists
+            if (!userRepository.existsByUsername("admin")) {
+                User admin = new User();
+                admin.setUsername("admin");
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setRoles(new HashSet<>(Set.of(adminRole)));
+                userRepository.save(admin);
+                System.out.println("✅ Default admin created (admin/admin123)");
+            }
 
-                userRepository.save(defaultUser);
+            // Ensure USER role exists
+            Role userRole = roleRepository.findByRoleName("USER")
+                    .orElseGet(() -> roleRepository.save(new Role("USER", "Regular user role")));
 
-                System.out.println("Default admin user created: username='admin', password='admin123'");
-            } else {
-                System.out.println("Users already exist in the database.");
+            // Create regular user if not exists
+            if (!userRepository.existsByUsername("regular")) {
+                User regular = new User();
+                regular.setUsername("regular");
+                regular.setPassword(passwordEncoder.encode("12345"));
+                regular.setRoles(new HashSet<>(Set.of(userRole)));
+                userRepository.save(regular);
+                System.out.println("✅ Default regular created (regular/12345)");
             }
         };
     }
+
+
 }
