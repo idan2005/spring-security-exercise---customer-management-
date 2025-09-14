@@ -3,17 +3,19 @@ package com.example.customersmanagement.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 
 
-    @Entity
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Table(name = "roles")
+@Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "roles")
+@EqualsAndHashCode(exclude = "users")
 public class Role {
     @Column(name = "id",nullable = false,unique = true)
     @Id

@@ -15,7 +15,7 @@ public class WebSecurityConfig {
     @Bean
     public RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
-        String hierarchy = "ROLE_ADMIN > ROLE_USER";
+        String hierarchy = "ROLE_ADMIN > ROLE_MANAGER > ROLE_USER";
         roleHierarchy.setHierarchy(hierarchy);
         return roleHierarchy;
     }
@@ -24,15 +24,38 @@ public class WebSecurityConfig {
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/", "/home", "/public/**", "/login**", "/register**", "/about", "/contact", "/menu").permitAll()
+                        // Public paths - accessible to everyone
+                        .requestMatchers("/", "/home", "/public/**", "/login**", "/register**", "/about", "/contact").permitAll()
+                        
+                        // Test endpoints with different security levels
+                        .requestMatchers("/test/public").permitAll()  // Only this test endpoint is public
+                        .requestMatchers("/test/authenticated", "/test/permissions").authenticated()  // These require login
+                        .requestMatchers("/test/admin/**").hasRole("ADMIN")  // Admin test endpoints
+                        .requestMatchers("/test/manager/**").hasRole("MANAGER")  // Manager test endpoints
+                        .requestMatchers("/test/user/**").hasRole("USER")  // User test endpoints
+                        
+                        // Menu system - authenticated users only
+                        .requestMatchers("/menu").authenticated()
+                        
+                        // Admin area - ADMIN only
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")  // Allow both USER and ADMIN
+                        
+                        // Manager area - MANAGER and above
+                        .requestMatchers("/manager/**").hasRole("MANAGER")
+                        
+                        // User area - USER and above
+                        .requestMatchers("/user/**").hasRole("USER")
+                        
+                        // General API - authenticated users only
                         .requestMatchers("/api/**").authenticated()
+                        
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
+                        .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/", true)  // Redirect to home page after login
+                        .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 )
