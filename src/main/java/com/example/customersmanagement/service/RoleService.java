@@ -22,7 +22,7 @@ public class RoleService {
         return roleRepository.save(role);
     }
 
-    public Role updateRole(Integer roleId, Role role) {
+    public Role updateRole(Long roleId, Role role) {
         role.setId(roleId);
         return roleRepository.save(role);
     }

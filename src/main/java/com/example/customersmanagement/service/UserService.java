@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -174,46 +175,52 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserProfile> listUsersAsProfiles() {
-        return userRepository.findAll()
-                .stream()
-                .map(UserProfile::new)   // יש לך ctor(User) ב-UserProfile
-                .toList();
+        // loads roles in one go
+        var users = userRepository.findAllWithRoles();
+        return users.stream().map(UserProfile::new).toList();
     }
-
     @Transactional
     public UserProfile createUser(CreateUserRequest req) {
+        Objects.requireNonNull(req, "Request is null");
         if (userRepository.existsById(req.username())) {
             throw new IllegalArgumentException("Username already exists: " + req.username());
         }
 
-        var roles = req.roles().stream()
-                // אם אין לך מתודה כזו ב-RoleService, ראי הערה למטה
+        var roles = (req.roles() == null ? List.<String>of() : req.roles())
+                .stream()
                 .map(roleService::getOrCreate)
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
 
-        var user = new User();
-        user.setUsername(req.username());
-        user.setPassword(passwordEncoder.encode(req.password())); // הצפנה
-        user.setRoles(roles);
+        var u = new User();
+        u.setUsername(req.username());
+        u.setPassword(passwordEncoder.encode(req.password()));
+        u.setRoles(roles);
 
-        return new UserProfile(userRepository.save(user));
+        return new UserProfile(userRepository.save(u));
     }
-
+    @Transactional(readOnly = true)
+    public UserProfile getProfile(String username) {
+        var u = userRepository.findWithRolesByUsername(username)
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + username));
+        return new UserProfile(u);
+    }
     @Transactional
     public UserProfile updateUser(String username, UpdateUserRequest req) {
-        var user = userRepository.findById(username)
-                .orElseThrow(() -> new java.util.NoSuchElementException("User not found: " + username));
+        var u = userRepository.findById(username)
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + username));
 
-        if (req.password() != null && !req.password().isBlank()) {
-            user.setPassword(passwordEncoder.encode(req.password()));
+        if (req != null) {
+            if (req.password() != null && !req.password().isBlank()) {
+                u.setPassword(passwordEncoder.encode(req.password()));
+            }
+            if (req.roles() != null) {
+                var roles = req.roles().stream()
+                        .map(roleService::getOrCreate)
+                        .collect(Collectors.toSet());
+                u.setRoles(roles);
+            }
         }
-
-        var roles = req.roles().stream()
-                .map(roleService::getOrCreate)
-                .collect(java.util.stream.Collectors.toSet());
-        user.setRoles(roles);
-
-        return new UserProfile(userRepository.save(user));
+        return new UserProfile(userRepository.save(u));
     }
 
     @Transactional

@@ -1,35 +1,40 @@
 package com.example.customersmanagement.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Data
+@Table(name = "users")
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true) // ❗ never include collections
+@NamedEntityGraph(                                  // quick loader when you need roles
+        name = "User.withRoles",
+        attributeNodes = @NamedAttributeNode("roles")
+)
 public class User {
-    @Column(name = "username",nullable = false,unique = true)
+
     @Id
+    @Column(name = "username", nullable = false, updatable = false, length = 50)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private String username;
-    @Column(name = "password",nullable = false)
+
+    @Column(nullable = false)
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
-            joinColumns = @JoinColumn(name = "username"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"),
-            uniqueConstraints = @UniqueConstraint(name = "uk_user_role", columnNames = {"username", "role_id"}),
-            indexes = {
-                    @Index(name = "idx_user_roles_username", columnList = "username"),
-                    @Index(name = "idx_user_roles_role_id", columnList = "role_id")
-            }
+            joinColumns = @JoinColumn(name = "username", referencedColumnName = "username"),
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
     )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<Role> roles = new HashSet<>();
 }

@@ -16,11 +16,13 @@ import java.util.Set;
 @Configuration
 public class DataInitializer {
 
+    // נשאר כמו שהיה
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // נשאר CommandLineRunner (בלי @Transactional) – לא צריך, כל עוד Role.equals/hashCode לא נוגעות ב-users
     @Bean
     public CommandLineRunner initializeUsers(
             UserRepository userRepository,
@@ -31,26 +33,17 @@ public class DataInitializer {
             try {
                 System.out.println("🚀 התחלת יצירת נתוני בדיקה...");
 
-                // יצירת תפקידים
+                // ⚠️ חשוב: ודא ש-Role.equals/hashCode לא כוללות את השדה users (כדי לא לגרום לטעינה עצלה)
                 Role adminRole = roleRepository.findByRoleName("ADMIN")
-                        .orElseGet(() -> {
-                            Role role = new Role("ADMIN", "מנהל מערכת - גישה מלאה");
-                            return roleRepository.save(role);
-                        });
+                        .orElseGet(() -> roleRepository.save(new Role(null, "ADMIN", "מנהל מערכת - גישה מלאה", null)));
 
                 Role userRole = roleRepository.findByRoleName("USER")
-                        .orElseGet(() -> {
-                            Role role = new Role("USER", "משתמש רגיל - גישה מוגבלת");
-                            return roleRepository.save(role);
-                        });
+                        .orElseGet(() -> roleRepository.save(new Role(null, "USER", "משתמש רגיל - גישה מוגבלת", null)));
 
                 Role managerRole = roleRepository.findByRoleName("MANAGER")
-                        .orElseGet(() -> {
-                            Role role = new Role("MANAGER", "מנהל - גישה חלקית");
-                            return roleRepository.save(role);
-                        });
+                        .orElseGet(() -> roleRepository.save(new Role(null, "MANAGER", "מנהל - גישה חלקית", null)));
 
-                // יצירת משתמש מנהל ראשי
+                // admin
                 if (!userRepository.existsByUsername("admin")) {
                     User admin = new User();
                     admin.setUsername("admin");
@@ -60,7 +53,7 @@ public class DataInitializer {
                     System.out.println("✅ מנהל ראשי נוצר: admin/admin123");
                 }
 
-                // יצירת משתמש רגיל
+                // user
                 if (!userRepository.existsByUsername("user")) {
                     User user = new User();
                     user.setUsername("user");
@@ -70,7 +63,7 @@ public class DataInitializer {
                     System.out.println("✅ משתמש רגיל נוצר: user/user123");
                 }
 
-                // יצירת מנהל מחלקה
+                // manager
                 if (!userRepository.existsByUsername("manager")) {
                     User manager = new User();
                     manager.setUsername("manager");
@@ -80,7 +73,7 @@ public class DataInitializer {
                     System.out.println("✅ מנהל מחלקה נוצר: manager/manager123");
                 }
 
-                // יצירת משתמש לבדיקת אבטחה
+                // testuser
                 if (!userRepository.existsByUsername("testuser")) {
                     User testUser = new User();
                     testUser.setUsername("testuser");
@@ -90,7 +83,7 @@ public class DataInitializer {
                     System.out.println("✅ משתמש בדיקה נוצר: testuser/test123");
                 }
 
-                // יצירת משתמש מתקדם
+                // poweruser
                 if (!userRepository.existsByUsername("poweruser")) {
                     User powerUser = new User();
                     powerUser.setUsername("poweruser");
