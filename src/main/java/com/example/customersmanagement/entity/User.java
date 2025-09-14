@@ -22,9 +22,9 @@ public class User {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_roles",                           // join table name
-            joinColumns = @JoinColumn(name = "username"),  // FK to User
-            inverseJoinColumns = @JoinColumn(name = "role_id") // FK to Role
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "username"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = new HashSet<>();
 }

@@ -49,14 +49,6 @@ public class UserController {
         return response;
     }
 
-    // login/ - דף התחברות (handled by Spring Security, but you can customize)
-    @GetMapping("/login")
-    public Map<String, String> loginPage() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Please login");
-        return response;
-    }
-
     // register/ - דף הרשמה
     @GetMapping("/register")
     public Map<String, String> registerPage() {

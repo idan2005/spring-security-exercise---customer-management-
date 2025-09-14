@@ -47,7 +47,6 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
-    // Setters for your service
     public void setUsername(String username) {
         this.username = username;
     }

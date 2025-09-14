@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Management - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border-left-color: #dc2626;
+            color: #991b1b;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            border-left-color: #22c55e;
+            color: #166534;
+        }
+
+        .test-users {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .test-users h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-info:hover {
+            border-color: #667eea;
+            background: #f0f7ff;
+        }
+
+        .user-role {
+            background: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .user-role.admin { background: #dc2626; }
+        .user-role.manager { background: #f59e0b; }
+        .user-role.user { background: #22c55e; }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="login-header">
+        <h1>🔐 Login</h1>
+        <p>Customer Management System</p>
+    </div>
+
+    <!-- Error Messages -->
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <strong>❌ Login Failed:</strong>
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <!-- Logout Messages -->
+    <div th:if="${logoutMessage}" class="alert alert-success">
+        <strong>✅ Success:</strong>
+        <span th:text="${logoutMessage}"></span>
+    </div>
+
+    <!-- Login Form -->
+    <form th:action="@{/login}" method="post">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="login-btn">🚀 Login</button>
+    </form>
+
+    <!-- Test Users -->
+    <div class="test-users">
+        <h3>🧪 Test Users (Click to use):</h3>
+
+        <div class="user-info" onclick="fillCredentials('admin', 'admin123')">
+            <span>admin / admin123</span>
+            <span class="user-role admin">ADMIN</span>
+        </div>
+
+        <div class="user-info" onclick="fillCredentials('manager', 'manager123')">
+            <span>manager / manager123</span>
+            <span class="user-role manager">MANAGER</span>
+        </div>
+
+        <div class="user-info" onclick="fillCredentials('user', 'user123')">
+            <span>user / user123</span>
+            <span class="user-role user">USER</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillCredentials(username, password) {
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = password;
+        document.getElementById('username').focus();
+    }
+
+    // Add enter key support for quick login
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && event.target.tagName !== 'BUTTON') {
+            event.preventDefault();
+            document.querySelector('.login-btn').click();
+        }
+    });
+</script>
+</body>
+</html>
