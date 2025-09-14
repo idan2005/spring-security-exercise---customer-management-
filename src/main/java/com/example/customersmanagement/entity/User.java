@@ -24,7 +24,12 @@ public class User {
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "username"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
+            inverseJoinColumns = @JoinColumn(name = "role_id"),
+            uniqueConstraints = @UniqueConstraint(name = "uk_user_role", columnNames = {"username", "role_id"}),
+            indexes = {
+                    @Index(name = "idx_user_roles_username", columnList = "username"),
+                    @Index(name = "idx_user_roles_role_id", columnList = "role_id")
+            }
     )
     private Set<Role> roles = new HashSet<>();
 }

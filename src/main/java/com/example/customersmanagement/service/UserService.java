@@ -1,5 +1,7 @@
 package com.example.customersmanagement.service;
 
+import com.example.customersmanagement.dto.CreateUserRequest;
+import com.example.customersmanagement.dto.UpdateUserRequest;
 import com.example.customersmanagement.dto.UserProfile;
 import com.example.customersmanagement.entity.Role;
 import com.example.customersmanagement.entity.User;
@@ -8,6 +10,7 @@ import com.example.customersmanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -22,6 +25,8 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private RoleService roleService;
 
     // Existing methods...
     public List<User> findAll() {
@@ -165,5 +170,56 @@ public class UserService {
         activity.put("username", username);
         activity.put("message", "User activity tracking not implemented yet");
         return activity;
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserProfile> listUsersAsProfiles() {
+        return userRepository.findAll()
+                .stream()
+                .map(UserProfile::new)   // יש לך ctor(User) ב-UserProfile
+                .toList();
+    }
+
+    @Transactional
+    public UserProfile createUser(CreateUserRequest req) {
+        if (userRepository.existsById(req.username())) {
+            throw new IllegalArgumentException("Username already exists: " + req.username());
+        }
+
+        var roles = req.roles().stream()
+                // אם אין לך מתודה כזו ב-RoleService, ראי הערה למטה
+                .map(roleService::getOrCreate)
+                .collect(java.util.stream.Collectors.toSet());
+
+        var user = new User();
+        user.setUsername(req.username());
+        user.setPassword(passwordEncoder.encode(req.password())); // הצפנה
+        user.setRoles(roles);
+
+        return new UserProfile(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserProfile updateUser(String username, UpdateUserRequest req) {
+        var user = userRepository.findById(username)
+                .orElseThrow(() -> new java.util.NoSuchElementException("User not found: " + username));
+
+        if (req.password() != null && !req.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(req.password()));
+        }
+
+        var roles = req.roles().stream()
+                .map(roleService::getOrCreate)
+                .collect(java.util.stream.Collectors.toSet());
+        user.setRoles(roles);
+
+        return new UserProfile(userRepository.save(user));
+    }
+
+    @Transactional
+    public void deleteUserByUsername(String username) {
+        if (userRepository.existsById(username)) {
+            userRepository.deleteById(username);
+        }
     }
 }

@@ -1,18 +1,19 @@
 package com.example.customersmanagement.controller;
 
+import com.example.customersmanagement.dto.CreateUserRequest;
+import com.example.customersmanagement.dto.UpdateUserRequest;
+import com.example.customersmanagement.dto.UserProfile;
 import com.example.customersmanagement.entity.Role;
-import com.example.customersmanagement.entity.User;
-import com.example.customersmanagement.service.UserService;
 import com.example.customersmanagement.service.RoleService;
+import com.example.customersmanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.net.URI;
+import java.util.*;
 
 @RestController
 @RequestMapping("/admin")
@@ -24,7 +25,6 @@ public class AdminController {
     @Autowired
     private RoleService roleService;
 
-
     // admin/dashboard/ - דף ניהול ראשי
     @GetMapping("/dashboard")
     public Map<String, Object> adminDashboard() {
@@ -34,42 +34,45 @@ public class AdminController {
         return dashboard;
     }
 
-    // admin/users/ - רשימת כל המשתמשים
+    // admin/users/ - רשימת כל המשתמשים (DTO)
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return userService.findAll();
+    public List<UserProfile> getAllUsers() {
+        return userService.listUsersAsProfiles(); // מחזיר DTO בלי סיסמאות
     }
 
-    // admin/users/create/ - יצירת משתמש חדש
+    // admin/users/create/ - יצירת משתמש חדש (DTO in/out)
     @PostMapping("/users/create")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
+    public ResponseEntity<UserProfile> createUser(@RequestBody CreateUserRequest req) {
+        UserProfile created = userService.createUser(req);
+        URI location = URI.create("/admin/users/" + created.getUsername());
+        return ResponseEntity.created(location).body(created);
     }
 
-    // admin/users/{id}/edit/ - עריכת משתמש
+    // admin/users/{username}/edit/ - עדכון משתמש (DTO in/out)
     @PutMapping("/users/{username}/edit")
-    public ResponseEntity<User> editUser(@PathVariable String username, @RequestBody User updatedUser) {
-        User user = userService.updateUser(username, updatedUser);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserProfile> editUser(@PathVariable String username,
+                                                @RequestBody UpdateUserRequest req) {
+        UserProfile updated = userService.updateUser(username, req);
+        return ResponseEntity.ok(updated);
     }
 
-    // admin/users/{id}/delete/ - מחיקת משתמש
+    // admin/users/{username}/delete/ - מחיקת משתמש (ללא גוף)
     @DeleteMapping("/users/{username}/delete")
     public ResponseEntity<Map<String, String>> deleteUser(@PathVariable String username) {
-        userService.deleteUser(username);
+        userService.deleteUserByUsername(username);
         Map<String, String> response = new HashMap<>();
         response.put("message", "User deleted successfully");
         return ResponseEntity.ok(response);
+        // לחלופין: return ResponseEntity.noContent().build();
     }
 
-    // admin/roles/ - ניהול תפקידים
+    // admin/roles/ - ניהול תפקידים (משאיר כ-Entity אם זה רק לצפייה/ניהול פנימי)
     @GetMapping("/roles")
     public List<Role> getAllRoles() {
         return roleService.findAll();
     }
 
-    // admin/reports/ - דוחות מערכת
+    // admin/reports/ - דוחות מערכת (כמו שהיה)
     @GetMapping("/reports")
     public Map<String, Object> getSystemReports() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -82,7 +85,6 @@ public class AdminController {
         } else {
             reports.put("summary", "Basic report - no admin privileges");
         }
-
         return reports;
     }
 }

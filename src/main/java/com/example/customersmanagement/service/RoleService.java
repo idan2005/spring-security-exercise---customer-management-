@@ -4,6 +4,7 @@ import com.example.customersmanagement.entity.Role;
 import com.example.customersmanagement.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -32,5 +33,14 @@ public class RoleService {
 
     public long getTotalRoles() {
         return roleRepository.count();
+    }
+    @Transactional
+    public Role getOrCreate(String roleName) {
+        return roleRepository.findByRoleName(roleName)
+                .orElseGet(() -> {
+                    Role r = new Role();
+                    r.setRoleName(roleName);
+                    return roleRepository.save(r);
+                });
     }
 }

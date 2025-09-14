@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
+// User for test only, not required for the app
 @RestController
 @RequestMapping("/test")
 public class SecurityTestController {
